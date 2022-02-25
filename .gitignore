@@ -1,6 +1,7 @@
 HelloWorld.cpp
 *.exe
 *.obj
+*.class
 
 .vs
 .vs/

@@ -2,6 +2,7 @@
 // COP4520
 
 class CrystalVase{
-    public static void main(String[] args)
+    public static void main(String[] args){
 
+    }
 }

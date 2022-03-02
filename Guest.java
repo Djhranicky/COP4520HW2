@@ -40,6 +40,9 @@ public class Guest implements Runnable{
                     else if(count == numGuests){
                         BirthdayParty.declare();
                     }
+                    if(state != State.WIN){
+                        state = State.WAITING;
+                    }
                 }
             }
             else{
@@ -49,6 +52,9 @@ public class Guest implements Runnable{
                 else if(state == State.INMAZE){
                     if(replaced == false && cupcake.compareAndSet(false, true)){
                         replaced = true;
+                    }
+                    if(state != State.WIN){
+                        state = State.WAITING;
                     }
                 }
             }

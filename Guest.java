@@ -19,6 +19,7 @@ public class Guest implements Runnable{
         this.numGuests = numGuests;
         this.state = State.WAITING;
         this.replaced = false;
+        this.count = 0;
     }
 
     public void setState(State state){
@@ -29,7 +30,17 @@ public class Guest implements Runnable{
     public void run(){
         while(state != State.WIN){
             if(leader){
-                if(count)
+                if(state == State.WAITING){
+                    continue;
+                }
+                else if(state == State.INMAZE){
+                    if(count < numGuests && cupcake.compareAndSet(true, false)){
+                        count++;
+                    }
+                    else if(count == numGuests){
+                        BirthdayParty.declare();
+                    }
+                }
             }
             else{
                 if(state == State.WAITING){

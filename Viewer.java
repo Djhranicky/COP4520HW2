@@ -24,6 +24,8 @@ public class Viewer implements Runnable{
         this.state = State.WAITING;
     }
 
+
+    // Allow the exiting guest to tell the next one to enter.
     public void setState(State state){
         this.state = state;
     }
@@ -31,21 +33,33 @@ public class Viewer implements Runnable{
     @Override
     public void run(){
 
+        // Randomly choose the chance they will enter the queue.
         Random rand = new Random(System.currentTimeMillis());
         double qChance = rand.nextDouble()/3;
         
         while(state != State.HOME){
+
+            // While waiting, they choose to enter the queue every so often.
             if(state == State.WAITING){
+
                 try {
                     Thread.sleep(100);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
+
+                // If they choose to enter the queue, the chances of doing so
+                // again decrease.
                 if(rand.nextDouble() < qChance){
                     queue.add(guestNum);
                     qChance /= 3;
                 }
-            } else if(state == State.VIEWING){
+
+            }
+            
+            // Randomly choose some time to view, then when they leave, they
+            // tell the next guest to go view the vase.
+            else if(state == State.VIEWING){
                 System.out.println("Guest "+guestNum+" is viewing");
                 int viewTime = (int)rand.nextDouble()*500;
                 try {

@@ -5,6 +5,7 @@ import java.util.Scanner;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.Random;
 
+
 class BirthdayParty{
 
     // Global variable to track if a guest has declared that all guests have
@@ -35,11 +36,11 @@ class BirthdayParty{
         // Create the guest objects. The first guest automatically becomes the
         // leader.
         Guest[] guests = new Guest[numGuests];
-        guests[0] = new Guest(true, isCupcake, numGuests);
+        guests[0] = new Guest(true, isCupcake, numGuests, Guest.Problem.PARTY);
         Thread th = new Thread(guests[0]);
         th.start();
         for(int i = 1; i < numGuests; i++){
-            guests[i] = new Guest(false, isCupcake, numGuests);
+            guests[i] = new Guest(false, isCupcake, numGuests, Guest.Problem.PARTY);
             th = new Thread(guests[i]);
             th.start();
         }

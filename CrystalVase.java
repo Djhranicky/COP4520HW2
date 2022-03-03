@@ -32,6 +32,7 @@ class CrystalVase{
 
         // Allow some threads to populate the queue before polling the first
         // one. (People must mingle before they can see the vase!)
+        System.out.println("The guests are talking before they see the vase");
         try {
             Thread.sleep(2000);
         } catch (InterruptedException e) {

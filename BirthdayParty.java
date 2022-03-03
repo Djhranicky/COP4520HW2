@@ -36,11 +36,11 @@ class BirthdayParty{
         // Create the guest objects. The first guest automatically becomes the
         // leader.
         Guest[] guests = new Guest[numGuests];
-        guests[0] = new Guest(true, isCupcake, numGuests, Guest.Problem.PARTY);
+        guests[0] = new Guest(true, isCupcake, numGuests);
         Thread th = new Thread(guests[0]);
         th.start();
         for(int i = 1; i < numGuests; i++){
-            guests[i] = new Guest(false, isCupcake, numGuests, Guest.Problem.PARTY);
+            guests[i] = new Guest(false, isCupcake, numGuests);
             th = new Thread(guests[i]);
             th.start();
         }

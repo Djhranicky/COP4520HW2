@@ -6,28 +6,21 @@ public class Guest implements Runnable{
         WAITING, INMAZE, WIN
     };
 
-
-    enum Problem{
-        PARTY, VASE
-    };
-
     
     private State state;
     private Boolean replaced;
     private int count;
-    Problem problem;
     int numGuests;
     Boolean leader;
     AtomicBoolean cupcake;
 
-    public Guest(Boolean leader, AtomicBoolean cupcake, int numGuests, Problem problem){
+    public Guest(Boolean leader, AtomicBoolean cupcake, int numGuests){
         this.leader = leader;
         this.cupcake = cupcake;
         this.numGuests = numGuests;
         this.state = State.WAITING;
         this.replaced = false;
         this.count = 0;
-        this.problem = problem;
     }
 
     public State getState(){
@@ -40,35 +33,33 @@ public class Guest implements Runnable{
 
     @Override
     public void run(){
-        if(problem == Problem.PARTY){
-            while(state != State.WIN){
-                if(leader){
-                    if(state == State.WAITING){
-                        continue;
+        while(state != State.WIN){
+            if(leader){
+                if(state == State.WAITING){
+                    continue;
+                }
+                else if(state == State.INMAZE){
+                    if(count < numGuests && cupcake.compareAndSet(true, false)){
+                        count++;
                     }
-                    else if(state == State.INMAZE){
-                        if(count < numGuests && cupcake.compareAndSet(true, false)){
-                            count++;
-                        }
-                        else if(count == numGuests){
-                            BirthdayParty.declare();
-                        }
-                        if(state != State.WIN){
-                            state = State.WAITING;
-                        }
+                    else if(count == numGuests){
+                        BirthdayParty.declare();
+                    }
+                    if(state != State.WIN){
+                        state = State.WAITING;
                     }
                 }
-                else{
-                    if(state == State.WAITING){
-                        continue;
+            }
+            else{
+                if(state == State.WAITING){
+                    continue;
+                }
+                else if(state == State.INMAZE){
+                    if(replaced == false && cupcake.compareAndSet(false, true)){
+                        replaced = true;
                     }
-                    else if(state == State.INMAZE){
-                        if(replaced == false && cupcake.compareAndSet(false, true)){
-                            replaced = true;
-                        }
-                        if(state != State.WIN){
-                            state = State.WAITING;
-                        }
+                    if(state != State.WIN){
+                        state = State.WAITING;
                     }
                 }
             }

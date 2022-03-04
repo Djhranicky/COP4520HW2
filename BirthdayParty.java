@@ -7,15 +7,21 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 class BirthdayParty{
 
-    // Global variable to track if a guest has declared that all guests have
-    // gone through the labyrinth.
+    // Declared tracks if the leader says that all guests went through the 
+    // maze, and visited verifies which guests have entered
     static Boolean declared = false;
     static Boolean visited[];
 
+
+    // Static function the leader uses to tell the Minotaur that everyone 
+    // has gone through
     public static void declare(){
         declared = true;
     }
 
+
+    // Static function the guests use to tell the Minotaur that they have 
+    // entered the labyrinth
     public static void haveVisited(int guestNum){
         visited[guestNum] = true;
     }
@@ -23,7 +29,9 @@ class BirthdayParty{
     public static void main(String[] args){
 
         // isCupcake keeps track of whether a cupcake is present at the end
-        // of the labyrinth
+        // of the labyrinth.
+        // mazeOccupied tracks if the maze is occupied.
+        // allGuests is used to verify if all of the guests have entered.
         Scanner sc = new Scanner(System.in);
         int numGuests;
         AtomicBoolean isCupcake = new AtomicBoolean(true);
@@ -35,6 +43,8 @@ class BirthdayParty{
         System.out.println("How many guests are attending the birthday party?");
         numGuests = sc.nextInt();
 
+
+        // Used to track which guests have entered the maze.
         visited = new Boolean[numGuests];
 
 
@@ -51,6 +61,8 @@ class BirthdayParty{
         }
 
 
+        // Randomly chooses one guest to enter the labyrinth until the leader
+        // says all guests have entered.
         while(!declared){
             synchronized(mazeOccupied){
                 while(mazeOccupied.get() == true){
@@ -65,21 +77,21 @@ class BirthdayParty{
         }
 
 
-        // Once the game is over, terminate the threads by setting all of their
-        // states to WIN, exiting the while loop.
+        // Once the game is over, let all guests know they have won.
         for(int i = 0; i < numGuests; i++){
             guests[i].setState(Guest.WIN);
         }
 
+        // Notify the waiting threads to allow them to leave the game.
         synchronized (mazeOccupied){
             System.out.println("Waiting for everyone to leave");
-            for(int i = 0; i < numGuests && mazeOccupied.get() == true; i++){
-            try{
-                mazeOccupied.wait();
-            } catch (InterruptedException e){
-                e.printStackTrace();
+            while(mazeOccupied.get() == true){
+                try{
+                    mazeOccupied.wait();
+                } catch (InterruptedException e){
+                    e.printStackTrace();
+                }
             }
-        }
             mazeOccupied.notifyAll();
         }
 

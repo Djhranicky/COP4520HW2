@@ -48,7 +48,7 @@ public class Guest implements Runnable{
     }
 
 
-    // Allows the Minotaur to call a guest into the labyrinth.
+    // Allows the Minotaur to say the guests have won.
     public void setState(int state){
         this.state.set(state);
     }
@@ -58,21 +58,29 @@ public class Guest implements Runnable{
     @Override
     public void run(){
         
-        // Guests will always run unless they win the game.
         synchronized (mazeOccupied){
 
             while(mazeOccupied.get() == false){
+
+                // If the guest has won, leave the game.
                 if(state.get() == WIN){
                     break;
                 }
-                    try{
-                        mazeOccupied.wait();
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
+
+                // Wait to be called into the maze.
+                try{
+                    mazeOccupied.wait();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+
+                // Mark the maze as occupied once summoned.
                 mazeOccupied.set(true);
                 BirthdayParty.haveVisited(guestNum);
 
+                // Logic for the leader. If there is a cupcake, eat it and
+                // increment the count. If the count reaches the number of 
+                // guests, then everyone has entered.
                 if(leader){
                     if(count < numGuests && cupcake.compareAndSet(true, false)){
                         count++;
@@ -81,12 +89,17 @@ public class Guest implements Runnable{
                     if(count == numGuests){
                         BirthdayParty.declare();
                     }
-                } else {
-                    if(replaced == false && cupcake.compareAndSet(false, true)){
+                } 
+                
+                // Logic for members. If there is no cupcake and they have not
+                // replaced it before, replace it one time.
+                else {
+                    if(!replaced && cupcake.compareAndSet(false, true)){
                         replaced = true;
                     }
                 }
                 
+                // Mark the maze as open when leaving.
                 mazeOccupied.set(false);
             }
         }

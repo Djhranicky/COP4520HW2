@@ -53,20 +53,22 @@ class BirthdayParty{
 
         // The game state, which keeps running as long as the leader has not
         // declared that everyone has gone through. 
+        System.out.println("Waiting to declare");
         while(!declared){
             nextGuest = rand.nextInt(numGuests);
-            guests[nextGuest].setState(Guest.State.INMAZE);
+            guests[nextGuest].setState(Guest.INMAZE);
             timesEntered[nextGuest]++;
-            while(guests[nextGuest].getState() == Guest.State.INMAZE){
+            while(guests[nextGuest].getState() == Guest.INMAZE){
                 ;
             }
         }
+        System.out.println("Declared");
 
 
         // Once the game is over, terminate the threads by setting all of their
         // states to WIN, exiting the while loop.
         for(int i = 0; i < numGuests; i++){
-            guests[i].setState(Guest.State.WIN);
+            guests[i].setState(Guest.WIN);
         }
 
 

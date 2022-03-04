@@ -1,4 +1,5 @@
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class Guest implements Runnable{
 
@@ -7,9 +8,9 @@ public class Guest implements Runnable{
     // they are waiting to be called into the labyrinth. INMAZE is when they 
     // are solving the maze, and WIN is after the leader has declared that all
     // guests have entered the maze at least once.
-    enum State{
-        WAITING, INMAZE, WIN
-    };
+    public static final int WAITING = 0;
+    public static final int INMAZE = 1;
+    public static final int WIN = 2;
 
     
     // Local variables. State keeps track of the current game state a guest
@@ -18,7 +19,7 @@ public class Guest implements Runnable{
     // NumGuests is the total number of guests, leader is true if a guest is 
     // the leader, and cupcake keeps track of the state of the cupcake. True
     // if it is there and false if it is not there.
-    private State state;
+    private AtomicInteger state;
     private Boolean replaced;
     private int count;
     int numGuests;
@@ -31,21 +32,21 @@ public class Guest implements Runnable{
         this.leader = leader;
         this.cupcake = cupcake;
         this.numGuests = numGuests;
-        this.state = State.WAITING;
+        this.state = new AtomicInteger(WAITING);
         this.replaced = false;
         this.count = 0;
     }
 
 
     // Returns the current state of a guest.
-    public State getState(){
-        return this.state;
+    public int getState(){
+        return this.state.get();
     }
 
 
     // Allows the Minotaur to call a guest into the labyrinth.
-    public void setState(State state){
-        this.state = state;
+    public void setState(int state){
+        this.state.set(state);
     }
 
 
@@ -54,15 +55,16 @@ public class Guest implements Runnable{
     public void run(){
         
         // Guests will always run unless they win the game.
-        while(state != State.WIN){
+        while(state.get() != WIN){
             
             // Logic for the leader to follow, allows them to count how many
             // people have entered the maze
             if(leader){
-                if(state == State.WAITING){
+                // System.out.println(count);
+                if(state.get() == WAITING){
                     continue;
                 }
-                else if(state == State.INMAZE){
+                else if(state.get() == INMAZE){
 
                     // The leader eats a cupcake if it is there and increments
                     // the count by one each time.
@@ -78,18 +80,16 @@ public class Guest implements Runnable{
                     }
 
                     // Wait again after leaving the maze if they haven't won.
-                    if(state != State.WIN){
-                        state = State.WAITING;
-                    }
+                    state.compareAndSet(INMAZE, WAITING);
                 }
             }
 
             // Logic for the other guests to follow.
             else{
-                if(state == State.WAITING){
+                if(state.get() == WAITING){
                     continue;
                 }
-                else if(state == State.INMAZE){
+                else if(state.get() == INMAZE){
 
                     // Replace the cupcake only if they have not already
                     // replaced it before.
@@ -98,9 +98,7 @@ public class Guest implements Runnable{
                     }
 
                     // Wait again after leaving the maze if they haven't won.
-                    if(state != State.WIN){
-                        state = State.WAITING;
-                    }
+                    state.compareAndSet(INMAZE, WAITING);
                 }
             }
         }

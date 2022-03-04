@@ -22,19 +22,23 @@ public class Guest implements Runnable{
     private AtomicInteger state;
     private Boolean replaced;
     private int count;
+    private int guestNum;
     int numGuests;
     Boolean leader;
     AtomicBoolean cupcake;
+    AtomicBoolean mazeOccupied;
 
 
     // Simple constructor for the Guests.
-    public Guest(Boolean leader, AtomicBoolean cupcake, int numGuests){
+    public Guest(int i, Boolean leader, AtomicBoolean cupcake, int numGuests, AtomicBoolean mazeOccupied){
         this.leader = leader;
         this.cupcake = cupcake;
         this.numGuests = numGuests;
         this.state = new AtomicInteger(WAITING);
         this.replaced = false;
         this.count = 0;
+        this.mazeOccupied = mazeOccupied;
+        this.guestNum = i;
     }
 
 
@@ -55,51 +59,35 @@ public class Guest implements Runnable{
     public void run(){
         
         // Guests will always run unless they win the game.
-        while(state.get() != WIN){
-            
-            // Logic for the leader to follow, allows them to count how many
-            // people have entered the maze
-            if(leader){
-                // System.out.println(count);
-                if(state.get() == WAITING){
-                    continue;
-                }
-                else if(state.get() == INMAZE){
+        synchronized (mazeOccupied){
 
-                    // The leader eats a cupcake if it is there and increments
-                    // the count by one each time.
+            while(mazeOccupied.get() == false){
+                if(state.get() == WIN){
+                    break;
+                }
+                    try{
+                        mazeOccupied.wait();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                mazeOccupied.set(true);
+                BirthdayParty.haveVisited(guestNum);
+
+                if(leader){
                     if(count < numGuests && cupcake.compareAndSet(true, false)){
                         count++;
                     }
 
-                    // Declare that all guests have entered the maze at least
-                    // once when they have eaten a number of cupcakes equal to
-                    // the number of guests.
-                    else if(count == numGuests){
+                    if(count == numGuests){
                         BirthdayParty.declare();
                     }
-
-                    // Wait again after leaving the maze if they haven't won.
-                    state.compareAndSet(INMAZE, WAITING);
-                }
-            }
-
-            // Logic for the other guests to follow.
-            else{
-                if(state.get() == WAITING){
-                    continue;
-                }
-                else if(state.get() == INMAZE){
-
-                    // Replace the cupcake only if they have not already
-                    // replaced it before.
+                } else {
                     if(replaced == false && cupcake.compareAndSet(false, true)){
                         replaced = true;
                     }
-
-                    // Wait again after leaving the maze if they haven't won.
-                    state.compareAndSet(INMAZE, WAITING);
                 }
+                
+                mazeOccupied.set(false);
             }
         }
     }

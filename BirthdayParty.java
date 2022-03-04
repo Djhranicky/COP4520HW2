@@ -3,7 +3,6 @@
 
 import java.util.Scanner;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.Random;
 
 
 class BirthdayParty{
@@ -11,9 +10,14 @@ class BirthdayParty{
     // Global variable to track if a guest has declared that all guests have
     // gone through the labyrinth.
     static Boolean declared = false;
+    static Boolean visited[];
 
     public static void declare(){
         declared = true;
+    }
+
+    public static void haveVisited(int guestNum){
+        visited[guestNum] = true;
     }
 
     public static void main(String[] args){
@@ -23,8 +27,7 @@ class BirthdayParty{
         Scanner sc = new Scanner(System.in);
         int numGuests;
         AtomicBoolean isCupcake = new AtomicBoolean(true);
-        Random rand = new Random();
-        int nextGuest;
+        AtomicBoolean mazeOccupied = new AtomicBoolean(false);
         Boolean allGuests = true;
         
 
@@ -32,37 +35,34 @@ class BirthdayParty{
         System.out.println("How many guests are attending the birthday party?");
         numGuests = sc.nextInt();
 
+        visited = new Boolean[numGuests];
+
 
         // Create the guest objects. The first guest automatically becomes the
         // leader.
         Guest[] guests = new Guest[numGuests];
-        guests[0] = new Guest(true, isCupcake, numGuests);
+        guests[0] = new Guest(0, true, isCupcake, numGuests, mazeOccupied);
         Thread th = new Thread(guests[0]);
         th.start();
         for(int i = 1; i < numGuests; i++){
-            guests[i] = new Guest(false, isCupcake, numGuests);
+            guests[i] = new Guest(i, false, isCupcake, numGuests, mazeOccupied);
             th = new Thread(guests[i]);
             th.start();
         }
 
-        
-        // Minotaur keeping track of the number of times each guest enters the
-        // labyrinth for proof of correctness.
-        int[] timesEntered = new int[numGuests];
 
-
-        // The game state, which keeps running as long as the leader has not
-        // declared that everyone has gone through. 
-        System.out.println("Waiting to declare");
         while(!declared){
-            nextGuest = rand.nextInt(numGuests);
-            guests[nextGuest].setState(Guest.INMAZE);
-            timesEntered[nextGuest]++;
-            while(guests[nextGuest].getState() == Guest.INMAZE){
-                ;
+            synchronized(mazeOccupied){
+                while(mazeOccupied.get() == true){
+                    try{
+                       mazeOccupied.wait();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+                mazeOccupied.notify();
             }
         }
-        System.out.println("Declared");
 
 
         // Once the game is over, terminate the threads by setting all of their
@@ -71,22 +71,28 @@ class BirthdayParty{
             guests[i].setState(Guest.WIN);
         }
 
+        synchronized (mazeOccupied){
+            System.out.println("Waiting for everyone to leave");
+            for(int i = 0; i < numGuests && mazeOccupied.get() == true; i++){
+            try{
+                mazeOccupied.wait();
+            } catch (InterruptedException e){
+                e.printStackTrace();
+            }
+        }
+            mazeOccupied.notifyAll();
+        }
+
 
         // Checks if all of the guests entered the labyrinth and prints the
         // result.
         for(int i = 0; i < numGuests; i++){
-            allGuests = allGuests && (timesEntered[i] > 0);
+            allGuests = allGuests && visited[i];
         }
         if(allGuests){
             System.out.println("All Guests entered the labyrinth");
         } else {
             System.out.println("At least one guest did not enter the labyrinth");
-        }
-
-
-        // Prints the number of times each guest entered the labyrinth.
-        for(int i = 0; i < numGuests; i++){
-            System.out.println("Guest "+i+" entered "+timesEntered[i]+" times.");
         }
 
         sc.close();

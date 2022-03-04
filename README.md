@@ -14,12 +14,14 @@ count reaches the number of guests, they then know for sure that each participat
 accounted for one and only one cupcake.
 
 ## Experimental Evaluation
-For experimental evaluation, the main thread keeps track of the number of times each guest has participated in the 
-labyrinth. Once the game has completed, the main thread verifies everyone has entered and prints as such and also prints the 
-number of times each guest entered. Apparently there were concerns that the Minotaur should not know how many times each guest 
-has entered the labyrinth. While those seem unfounded because the Minotaur's knowledge does not impact the functioning of the 
-game, this implementation does assume that the Minotaur can know this. This would be an easy fix as all of the Minotaur's 
-functionality can be abstracted out into a separate class and the information tracking would be purely from an unbiased 3rd party.
+The previous version of this code had all of the threads spin waiting for their turn, which caused it to slow down dramatically 
+past 11 guests (12 threads including the main one). Thinking back on it now this is probably the hardware limit for my computer, 
+and after that it incurred massive overhead from context switching for all of the threads. The current implementation has each 
+thread wait to be notified by the main thread. This notification process allows for random selection of the guests and also only 
+one guest will make it through at a time as an AtomicBoolean is being used as a pseudo-semaphore with one lock. After the leader 
+has declared everyone has entered, the Minotaur (main thread) verifies that they did indeed all go through the maze. This does 
+not violate the communication restriction between guests as they only ever tell the Minotaur if they have entered, not each 
+other.
 
 # CrystalVase
 
